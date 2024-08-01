@@ -1,7 +1,7 @@
 # Sarif
 
 Package sarif provides the data structures required to encode and
-decode [SARIF] documents.
+decode a [SARIF] document.
 
 Docs at <https://pkg.go.dev/github.com/jroimartin/sarif>.
 
