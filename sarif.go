@@ -242,11 +242,11 @@ type ThreadFlow struct {
 // program.
 type ThreadFlowLocation struct {
 	// Module is the name of the module that contains the code
-	// location specified by this [ThreadFlowLocation] value.
+	// location specified by this ThreadFlowLocation value.
 	Module string `json:"module,omitempty"`
 
 	// Location specifies the location to which the
-	// [ThreadFlowLocation] value refers.
+	// ThreadFlowLocation value refers.
 	Location Location `json:"location,omitempty"`
 }
 
@@ -319,7 +319,7 @@ func (loc PhysicalLocation) String() string {
 // ArtifactLocation represents an artifact’s location.
 type ArtifactLocation struct {
 	// URI specifies the location of the artifact. It is relative
-	// to [ArtifactLocation.URIBaseID].
+	// to ArtifactLocation.URIBaseID.
 	URI string `json:"uri,omitempty"`
 
 	// URIBaseID describes a top-level artifact.
