@@ -7,8 +7,20 @@
 package sarif
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"path"
+)
+
+const (
+	// sarifVersion is the SARIF version supported by this package.
+	sarifVersion = "2.1.0"
+
+	// sarifSchema is an absolute URI pointing to a JSON schema
+	// document describing the version of the SARIF format.
+	sarifSchema = "https://json.schemastore.org/sarif-2.1.0.json"
 )
 
 // Log specifies the version of the file format and contains the
@@ -28,8 +40,64 @@ type Log struct {
 	Runs []Run `json:"runs,omitempty"`
 }
 
+// Decode reads a SARIF document from the provided [io.Reader] and
+// returns the decoded [Log] value.
+func Decode(r io.Reader) (Log, error) {
+	var l Log
+	if err := json.NewDecoder(r).Decode(&l); err != nil {
+		return Log{}, fmt.Errorf("decode SARIF document: %w", err)
+	}
+	if l.Version != sarifVersion {
+		return Log{}, fmt.Errorf("unsupported SARIF version: %v", l.Version)
+	}
+	return l, nil
+}
+
+// DecodeFile reads a SARIF document from the specified file and
+// returns the decoded [Log] value.
+func DecodeFile(name string) (Log, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return Log{}, fmt.Errorf("open SARIF file: %w", err)
+	}
+	defer f.Close()
+	return Decode(f)
+}
+
+// Encode encodes the [Log] value as a SARIF document and writes the
+// result to the provided [io.Writer].
+func (l Log) Encode(w io.Writer) error {
+	if l.Version == "" {
+		l.Version = sarifVersion
+	} else if l.Version != sarifVersion {
+		return fmt.Errorf("unsupported SARIF version: %v", l.Version)
+	}
+
+	if l.Schema == "" {
+		l.Schema = sarifSchema
+	}
+
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(l); err != nil {
+		return fmt.Errorf("encode SARIF document: %w", err)
+	}
+	return nil
+}
+
+// EncodeFile encodes the [Log] value as a SARIF document and stores
+// the result in the specified file.
+func (l Log) EncodeFile(name string) error {
+	f, err := os.Create(name)
+	if err != nil {
+		return fmt.Errorf("create SARIF file: %w", err)
+	}
+	defer f.Close()
+	return l.Encode(f)
+}
+
 // FindRule returns the rule with the provided identifier.
-func (l *Log) FindRule(id string) (rule Rule, found bool) {
+func (l Log) FindRule(id string) (rule Rule, found bool) {
 	for _, run := range l.Runs {
 		for _, rule := range run.Tool.Driver.Rules {
 			if rule.ID == id {
